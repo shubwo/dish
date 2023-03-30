@@ -1,0 +1,35 @@
+import requests
+from flask import Flask, render_template
+from microsoftgraph.client import Client
+
+app = Flask(__name__)
+
+client_id = '6aad607f-f98e-46af-ad46-5dc3254254e2'
+client_secret = '140ed599-a3b5-4c24-8941-88370d62c8ea'
+tenant_id = 'ece0e386-c967-4862-8756-ebae52fa3701'
+access_token = 'YOUR_ACCESS_TOKEN'
+
+graph_client = Client(client_id, client_secret, access_token=access_token)
+
+@app.route('/')
+def dashboard():
+    # Get unread emails from Outlook
+    emails = graph_client.get('/me/mailFolders/Inbox/messages?$filter=isRead eq false')
+    unread_emails = emails['value']
+
+    # Get upcoming events from Outlook Calendar
+    events = graph_client.get('/me/events?$filter=start/dateTime ge \'2022-03-30\'')
+    upcoming_events = events['value']
+
+    # Get HR announcements
+    hr_announcements_url = 'https://yourcompany.com/api/hr/announcements'
+    hr_announcements = requests.get(hr_announcements_url).json()
+
+    # Get company news
+    company_news_url = 'https://yourcompany.com/api/news'
+    company_news = requests.get(company_news_url).json()
+
+    return render_template('dashboard.html', unread_emails=unread_emails, upcoming_events=upcoming_events, hr_announcements=hr_announcements, company_news=company_news)
+
+if __name__ == '__main__':
+    app.run()
